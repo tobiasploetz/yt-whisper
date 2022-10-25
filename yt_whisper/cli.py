@@ -1,4 +1,5 @@
 import os
+from typing import Any, Dict, List
 import whisper
 from whisper.tokenizer import LANGUAGES, TO_LANGUAGE_CODE
 import argparse
@@ -85,7 +86,8 @@ def main():
     audios = get_audio(args.pop("video"))
     break_lines = args.pop("break_lines")
 
-    for title, (audio_path, video_id) in audios.items():
+    for title, audio_data in audios.items():
+        audio_path, video_id = audio_data["path"], audio_data["id"]
         warnings.filterwarnings("ignore")
         result = model.transcribe(audio_path, **args)
         warnings.filterwarnings("default")
@@ -113,7 +115,17 @@ def main():
             print("Saved CSV to", os.path.abspath(csv_path))
 
 
-def get_audio(urls):
+def get_audio(urls: List[str]) -> Dict[str, Dict[str, Any]]:
+    """Download audio from YouTube videos and return a dictionary with the
+    title and path to the audio file.
+
+    Args:
+        urls (List[str]): list of YouTube video URLs
+
+    Returns:
+        Dict[str, Dict[str, Any]]: dictionary with "title" as key and metadata as item. Metadata is a dictionary with "path" and "id" keys.
+    """
+
     temp_dir = tempfile.gettempdir()
 
     ydl = yt_dlp.YoutubeDL(
@@ -137,10 +149,10 @@ def get_audio(urls):
     for url in urls:
         result = ydl.extract_info(url, download=True)
         print(f"Downloaded video \"{result['title']}\". Generating subtitles...")
-        paths[result["title"]] = (
-            os.path.join(temp_dir, f"{result['id']}.mp3"),
-            result["id"],
-        )
+        paths[result["title"]] = {
+            "path": os.path.join(temp_dir, f"{result['id']}.mp3"),
+            "id": result["id"],
+        }
 
     return paths
 
