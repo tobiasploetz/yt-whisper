@@ -1,4 +1,5 @@
 from typing import Iterator, TextIO
+import pandas as pd
 
 
 def str2bool(string):
@@ -75,6 +76,10 @@ def write_srt(transcript: Iterator[dict], file: TextIO, line_length: int = 0):
             file=file,
             flush=True,
         )
+
+def write_csv(transcript: Iterator[dict], file: TextIO):
+    df = pd.DataFrame(transcript)
+    df.to_csv(file, index=False)
 
 def slugify(title):
     return "".join(c if c.isalnum() else "_" for c in title).rstrip("_")
