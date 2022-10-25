@@ -5,7 +5,7 @@ from whisper.tokenizer import LANGUAGES, TO_LANGUAGE_CODE
 import argparse
 import warnings
 import yt_dlp
-from .utils import slugify, str2bool, write_srt, write_vtt
+from .utils import slugify, str2bool, write_srt, write_vtt, write_csv
 import tempfile
 
 
@@ -110,7 +110,7 @@ def main():
             print("Saved SRT to", os.path.abspath(srt_path))
         elif subtitles_format == "csv":
             csv_path = os.path.join(output_dir, f"{output_name}.csv")
-            result["segments"].to_csv(csv_path, index=False)
+            write_csv(result["segments"], csv_path)
 
             print("Saved CSV to", os.path.abspath(csv_path))
 
