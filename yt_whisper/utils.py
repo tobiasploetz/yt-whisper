@@ -7,11 +7,12 @@ def str2bool(string):
     if string in str2val:
         return str2val[string]
     else:
-        raise ValueError(
-            f"Expected one of {set(str2val.keys())}, got {string}")
+        raise ValueError(f"Expected one of {set(str2val.keys())}, got {string}")
 
 
-def format_timestamp(seconds: float, always_include_hours: bool = False, decimal_marker: str = '.'):
+def format_timestamp(
+    seconds: float, always_include_hours: bool = False, decimal_marker: str = "."
+):
     assert seconds >= 0, "non-negative timestamp expected"
     milliseconds = round(seconds * 1000.0)
 
@@ -25,31 +26,36 @@ def format_timestamp(seconds: float, always_include_hours: bool = False, decimal
     milliseconds -= seconds * 1_000
 
     hours_marker = f"{hours:02d}:" if always_include_hours or hours > 0 else ""
-    return f"{hours_marker}{minutes:02d}:{seconds:02d}{decimal_marker}{milliseconds:03d}"
+    return (
+        f"{hours_marker}{minutes:02d}:{seconds:02d}{decimal_marker}{milliseconds:03d}"
+    )
+
 
 def break_line(line: str, length: int):
-    break_index = min(len(line)//2, length) # split evenly or at maximum length
+    break_index = min(len(line) // 2, length)  # split evenly or at maximum length
 
     # work backwards from that guess to split between words
     # if break_index <= 1, we've hit the beginning of the string and can't split
     while break_index > 1:
         if line[break_index - 1] == " ":
-            break # break at space
+            break  # break at space
         else:
             break_index -= 1
     if break_index > 1:
         # split the line, not including the space at break_index
-        return line[:break_index - 1] + "\n" + line[break_index:]
+        return line[: break_index - 1] + "\n" + line[break_index:]
     else:
         return line
+
 
 def process_segment(segment: dict, line_length: int = 0):
     segment["text"] = segment["text"].strip()
     if line_length > 0 and len(segment["text"]) > line_length:
         # break at N characters as per Netflix guidelines
         segment["text"] = break_line(segment["text"], line_length)
-    
+
     return segment
+
 
 def write_vtt(transcript: Iterator[dict], file: TextIO, line_length: int = 0):
     print("WEBVTT\n", file=file)
@@ -77,10 +83,12 @@ def write_srt(transcript: Iterator[dict], file: TextIO, line_length: int = 0):
             flush=True,
         )
 
+
 def write_csv(transcript: Iterator[dict], file: TextIO):
     df = pd.DataFrame(transcript)
+    df = df[["start", "end", "text"]]
     df.to_csv(file, index=False)
+
 
 def slugify(title):
     return "".join(c if c.isalnum() else "_" for c in title).rstrip("_")
-
